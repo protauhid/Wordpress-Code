@@ -16,8 +16,8 @@ import { Fragment, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 // 🔧 ইউনিক আইডি জেনারেট করার ফাংশন
-function generateUniqueId() {
-  return 'my-block-' + Math.random().toString(36).substr(2, 6);
+function generateUniqueId(clientId) {
+  return 'my-block-' + clientId.substr(0, 8); // clientId থেকে ইউনিক অংশ নিলাম
 }
 
 // 🔧 Edit কম্পোনেন্ট
@@ -34,8 +34,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
   // 🆔 clientId পরিবর্তন হলে নতুন uniqueId সেট করি (যখন ব্লক ডুপ্লিকেট হয়)
   useEffect(() => {
-    const newId = generateUniqueId();
-    setAttributes({ uniqueId: newId });
+    const newId = generateUniqueId(clientId);
+    if (!uniqueId || uniqueId !== newId) {
+      setAttributes({ uniqueId: newId });
+    }
   }, [clientId]);
 
   // 🎨 attributes থেকে স্টাইল তৈরি করে blockStyle এ সেভ করি
