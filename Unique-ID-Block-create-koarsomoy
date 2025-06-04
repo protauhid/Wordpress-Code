@@ -1,0 +1,119 @@
+import {
+  AlignmentToolbar,
+  BlockControls,
+  InspectorControls,
+  PanelColorSettings,
+  RichText,
+  useBlockProps,
+} from '@wordpress/blockEditor';
+
+import {
+  PanelBody,
+  __experimentalUnitControl as UnitControl,
+} from '@wordpress/components';
+
+import { Fragment, useEffect } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
+
+// 🔧 ইউনিক আইডি জেনারেট করার ফাংশন
+function generateUniqueId() {
+  return 'my-block-' + Math.random().toString(36).substr(2, 6);
+}
+
+// 🔧 Edit কম্পোনেন্ট
+export default function Edit({ attributes, setAttributes, clientId }) {
+  const {
+    content,
+    textColor,
+    backgroundColor,
+    fontSize,
+    textAlign,
+    blockStyle,
+    uniqueId,
+  } = attributes;
+
+  // 🆔 clientId পরিবর্তন হলে নতুন uniqueId সেট করি (যখন ব্লক ডুপ্লিকেট হয়)
+  useEffect(() => {
+    const newId = generateUniqueId();
+    setAttributes({ uniqueId: newId });
+  }, [clientId]);
+
+  // 🎨 attributes থেকে স্টাইল তৈরি করে blockStyle এ সেভ করি
+  useEffect(() => {
+  if (uniqueId) {
+    const customStyle = `
+      .${uniqueId} {
+        color: ${textColor};
+        background-color: ${backgroundColor};
+        font-size: ${fontSize};
+        text-align: ${textAlign};
+        margin: 40px;
+      }
+    `;
+    setAttributes({ blockStyle: customStyle });
+  }
+});
+
+
+  // ✅ ব্লকের প্রপস (Gutenberg রেন্ডারিং স্টাইল)
+  const blockProps = useBlockProps({
+    style: {
+      textAlign,
+    },
+  });
+
+  // ✅ JSX: Toolbar, Inspector এবং মূল কনটেন্ট
+  return (
+    <Fragment>
+      {/* 🔧 টুলবারে টেক্সট অ্যালাইনমেন্ট */}
+      <BlockControls>
+        <AlignmentToolbar
+          value={textAlign}
+          onChange={(value) => setAttributes({ textAlign: value })}
+        />
+      </BlockControls>
+
+      {/* 🎛️ সাইডবার সেটিংস */}
+      <InspectorControls>
+        <PanelColorSettings
+          title={__('Color Settings', 'my-blocks')}
+          colorSettings={[
+            {
+              value: textColor,
+              onChange: (color) => setAttributes({ textColor: color }),
+              label: __('Text Color', 'my-blocks'),
+            },
+            {
+              value: backgroundColor,
+              onChange: (color) => setAttributes({ backgroundColor: color }),
+              label: __('Background Color', 'my-blocks'),
+            },
+          ]}
+        />
+
+        <PanelBody title={__('Typography', 'my-blocks')} initialOpen={true}>
+          <UnitControl
+            label={__('Font Size', 'my-blocks')}
+            value={fontSize}
+            onChange={(value) => setAttributes({ fontSize: value })}
+            units={['px', 'em', 'rem']}
+          />
+        </PanelBody>
+      </InspectorControls>
+
+      {/* 🧠 ইনলাইন স্টাইল ব্লকে প্রয়োগ */}
+      <style>{blockStyle}</style>
+
+      {/* 🖋️ মূল কনটেন্ট */}
+      <div {...blockProps}>
+        <RichText
+          tagName="p"
+          className={uniqueId}
+          value={content}
+          onChange={(value) => setAttributes({ content: value })}
+          placeholder={__('Write something...', 'my-blocks')}
+        />
+      </div>
+    </Fragment>
+  );
+}
